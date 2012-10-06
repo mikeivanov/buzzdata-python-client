@@ -11,7 +11,11 @@ class Buzzdata(object):
     class Error(Exception):
         def __init__(self, response):
             self.code = response.status_code
-            self.message = response.json['message']
+            json = response.json
+            if json:
+                self.message = json['message']
+            else:
+                self.message = response.text
 
         def __str__(self):
             return "Buzzdata API Error: %s (%r)" % (self.message, self.code)
