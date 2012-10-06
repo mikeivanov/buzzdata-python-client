@@ -138,29 +138,25 @@ class Buzzdata(object):
                           rows=json.dumps(rows))
 
     def update_row(self, stage_id, row_number, row):
-        return self._post("%s/%s/stage/%s/rows/%d" % (stage_id + (row_number,)),
-                          row=json.dumps(row))
+        return self._put("%s/%s/stage/%s/rows/%d" % (stage_id + (row_number,)),
+                         row=json.dumps(row))
 
     def delete_row(self, stage_id, row_number):
-        return self._delete("%s/%s/stage/%s/rows/%d" % (stage_id + (row_number,)),
-                            row=json.dumps(row))
+        return self._delete("%s/%s/stage/%s/rows/%d" % (stage_id + (row_number,)))
 
     def commit_stage(self, stage_id):
-        return self._post("%s/%s/stage/%s/rows/commit" % stage_id)
+        return self._post("%s/%s/stage/%s/commit" % stage_id)
 
     def rollback_stage(self, stage_id):
-        return self._post("%s/%s/stage/%s/rows/rollback" % stage_id)
+        return self._post("%s/%s/stage/%s/rollback" % stage_id)
   
     # private
     
     def _request(self, method, path, params, data=None, files=None):
-        url = self.base_url + '/' + path
-        args = {'params': dict(params, api_key=self.api_key)}
-        if data is not None:
-            args['data'] = data
-        if files is not None:
-            args['files'] = files
-        response = method(url, **args)
+        response = method(self.base_url + '/' + path,
+                          params=dict(params, api_key=self.api_key),
+                          data=data,
+                          files=files)
         if response.status_code > 400:
             raise Buzzdata.Error(response)
         return response.json
@@ -170,6 +166,9 @@ class Buzzdata(object):
     
     def _delete(self, path, **params):
        return self._request(requests.delete, path, params)
+    
+    def _put(self, path, **data):
+       return self._request(requests.put, path, {}, data=data)
     
     def _post(self, path, files=None, **data):
        return self._request(requests.post, path, {}, data=data, files=files)
