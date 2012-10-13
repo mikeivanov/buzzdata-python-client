@@ -1,13 +1,11 @@
 import json
 import requests
 
-
-def form(formname, **fields):
-    return dict(('%s[%s]' % (formname, fieldname), value)
-                for fieldname, value in fields.items())
-
-
 class Buzzdata(object):
+    """
+    Buzzdata API Client.
+    """
+    
     class Error(Exception):
         def __init__(self, response):
             self.code = response.status_code
@@ -20,9 +18,47 @@ class Buzzdata(object):
         def __str__(self):
             return "Buzzdata API Error: %s (%r)" % (self.message, self.code)
 
-    def __init__(self, api_key=None, base_url="https://buzzdata.com/api"):
-        self.api_key = api_key
-        self.base_url = base_url
+    def __init__(self, access_token=None, base_url="https://buzzdata.com"):
+        """
+        Create a new client instance.
+        
+        **Parameters**:
+
+        :param base_url: a hive server's base URL, such as
+                         'https://buzzdata.com' (default),
+                         'https://myhive.buzzdata.com' and so on.
+
+        :access_token:   an OAuth2 access token.
+                         If not present, most of the calls will raise
+                         Invalid OAuth Request.
+
+        **Obtaining an OAuth2 token**
+
+        OAuth2 interactions are out of the scope of this module. You can do
+        something like this to get a token:
+        
+            >>> from requests_oauth2 import OAuth2
+            >>> def authorize_url(consumer_key, consumer_secret,
+            ...                   base_url='https://buzzdata.com',
+            ...                   scope='api_access',
+            ...                   redirect_uri='http://localhost:8080/foobar'):
+            ...     handler = OAuth2(consumer_key, consumer_secret,
+            ...                      base_url, redirect_uri)
+            ...     return handler.authorize_url(scope, response_type='token')
+            >>> print authorize_url('<key>', '<secret>')
+            https://buzzdata.com/oauth/authorize?response_type=token&...
+
+        Copy the printed URL and paste it into the browser. Confirm
+        authorization. When redirected, copy the token and somehow paste into
+        your client. It's a good idea to use a local http server or a service
+        like http://requestb.in/ for intercepting token redirects.
+        """
+        self.api_url = base_url + '/api'
+        if access_token is None:
+            params = None
+        else:
+            params = {'access_token': access_token}
+        self.client = requests.session(params=params)
 
     # general info
     
@@ -153,8 +189,7 @@ class Buzzdata(object):
     # private
     
     def _request(self, method, path, params, data=None, files=None):
-        response = method(self.base_url + '/' + path,
-                          params=dict(params, api_key=self.api_key),
+        response = method(self.api_url + '/' + path,
                           data=data,
                           files=files)
         if response.status_code > 400:
@@ -162,15 +197,19 @@ class Buzzdata(object):
         return response.json
 
     def _get(self, path, **params):
-       return self._request(requests.get, path, params)
+       return self._request(self.client.get, path, params)
     
     def _delete(self, path, **params):
-       return self._request(requests.delete, path, params)
+       return self._request(self.client.delete, path, params)
     
     def _put(self, path, **data):
-       return self._request(requests.put, path, {}, data=data)
+       return self._request(self.client.put, path, {}, data=data)
     
     def _post(self, path, files=None, **data):
-       return self._request(requests.post, path, {}, data=data, files=files)
+       return self._request(self.client.post, path, {}, data=data, files=files)
     
+
+def form(formname, **fields):
+    return dict(('%s[%s]' % (formname, fieldname), value)
+                for fieldname, value in fields.items())
 
