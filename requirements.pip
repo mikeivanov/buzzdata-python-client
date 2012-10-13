@@ -1,2 +1,1 @@
 requests>=0.14
-requests-oauth>=0.2
