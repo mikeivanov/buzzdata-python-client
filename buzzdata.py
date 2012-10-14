@@ -34,24 +34,31 @@ class Buzzdata(object):
 
         **Obtaining an OAuth2 token**
 
-        OAuth2 interactions are out of the scope of this module. You can do
-        something like this to get a token:
+        Acquiring OAuth2 tokens, their management and storage is out of the
+        scope of this module. Please use a custom solution or find a third
+        party module.
+
+        For development purposes you can do something like this:
         
-            >>> from requests_oauth2 import OAuth2
-            >>> def authorize_url(consumer_key, consumer_secret,
-            ...                   base_url='https://buzzdata.com',
-            ...                   scope='api_access',
-            ...                   redirect_uri='http://localhost:8080/foobar'):
-            ...     handler = OAuth2(consumer_key, consumer_secret,
-            ...                      base_url, redirect_uri)
-            ...     return handler.authorize_url(scope, response_type='token')
-            >>> print authorize_url('<key>', '<secret>')
+            from requests_oauth2 import OAuth2
+            consumer_key = '...'
+            consumer_secret = '...'
+            base_url = 'https://buzzdata.com'
+            scope = 'api_access'
+            redirect_uri = 'http://localhost:8080/foobar'
+            handler = OAuth2(consumer_key, consumer_secret,
+                             base_url, redirect_uri)
+            authorize_url = handler.authorize_url(scope, response_type='token')
+            print authorize_url
+
+        It should print a URL similar to this:
+        
             https://buzzdata.com/oauth/authorize?response_type=token&...
 
-        Copy the printed URL and paste it into the browser. Confirm
-        authorization. When redirected, copy the token and somehow paste into
-        your client. It's a good idea to use a local http server or a service
-        like http://requestb.in/ for intercepting token redirects.
+        Copy the URL and paste it into the browser. Confirm authorization.
+        When redirected to the `redirect_uri`, copy the token and somehow paste
+        into your client. It's a good idea to use a local http server or a
+        service like http://requestb.in/ for intercepting token redirects.
         """
         self.api_url = base_url + '/api'
         if access_token is None:
